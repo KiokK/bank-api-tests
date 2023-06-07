@@ -8,42 +8,41 @@ import by.vadzimmatsiushonak.bank.api.model.entity.BankPayment;
 import by.vadzimmatsiushonak.bank.api.model.entity.base.PaymentStatus;
 import by.vadzimmatsiushonak.bank.api.repository.BankAccountRepository;
 import by.vadzimmatsiushonak.bank.api.repository.BankPaymentRepository;
-import by.vadzimmatsiushonak.bank.api.service.BankAccountService;
-import by.vadzimmatsiushonak.bank.api.service.BankPaymentService;
 import by.vadzimmatsiushonak.bank.api.util.BankAccountTestBuilder;
 import by.vadzimmatsiushonak.bank.api.util.BankPaymentTestBuilder;
 import by.vadzimmatsiushonak.bank.api.util.InitiatePaymentRequestTestBuilder;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.test.context.ActiveProfiles;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static by.vadzimmatsiushonak.bank.api.util.ExceptionUtils.new_EntityNotFoundException;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 class BankPaymentServiceImplTest {
 
-    @SpyBean
+    @Mock
     private BankPaymentRepository bankPaymentRepository;
 
-    @Autowired
-    private BankPaymentService bankPaymentServiceImpl;
+    @InjectMocks
+    private BankPaymentServiceImpl bankPaymentServiceImpl;
 
-    @SpyBean
+    @Mock
     private BankAccountRepository bankAccountRepository;
 
-    @Autowired
-    private BankAccountService bankAccountService;
+    @InjectMocks
+    private BankAccountServiceImpl bankAccountService;
 
     @Nested
     public class Create {
@@ -60,11 +59,7 @@ class BankPaymentServiceImplTest {
                     .newBankPaymentByRequest(req2to1, PaymentStatus.ACCEPTED, initialSenderBankAccount);
             expactedBankPayment.setId(4L);// bankPaymentRepository.count() + 1
 
-            Mockito.doReturn(expactedBankPayment)
-                    .when(bankPaymentRepository)
-                    .save(newBankPayment);
-
-            System.out.println(newBankPayment.getBankAccount());
+            doReturn(expactedBankPayment).when(bankPaymentRepository).save(newBankPayment);
             newBankPayment = bankPaymentServiceImpl.create(newBankPayment);
 
             assertThat(newBankPayment.getId())
@@ -86,6 +81,9 @@ class BankPaymentServiceImplTest {
         @Test
         void checkFindByIdShouldReturnFirstInDB() {
             final long ID_IN_DB = 1L;
+            BankPayment expected = BankPaymentTestBuilder.IN_DB_ID_1();
+
+            doReturn(Optional.of(expected)).when(bankPaymentRepository).findById(ID_IN_DB);
             BankPayment actualBankPayment = bankPaymentServiceImpl.findById(ID_IN_DB).orElse(new BankPayment());
 
             assertThat(actualBankPayment.getId())
@@ -98,12 +96,18 @@ class BankPaymentServiceImplTest {
         @Test
         void checkFindAllVerify() {
             bankPaymentServiceImpl.findAll();
-            verify(bankPaymentRepository, times(2)).findAll();
+            verify(bankPaymentRepository).findAll();
         }
 
         @Test
-        void checkFindAllShouldReturnCount4() {
+        void checkFindAllShouldReturnCount3() {
             final int EXPECTED_SIZE = BankPaymentTestBuilder.COUNT;
+
+            doReturn(
+                    List.of(BankPaymentTestBuilder.IN_DB_ID_1(),
+                            BankPaymentTestBuilder.IN_DB_ID_2(),
+                            BankPaymentTestBuilder.IN_DB_ID_3())
+            ).when(bankPaymentRepository).findAll();
 
             assertThat(bankPaymentServiceImpl.findAll().size())
                     .isEqualTo(EXPECTED_SIZE);
@@ -120,10 +124,10 @@ class BankPaymentServiceImplTest {
             BankPayment expectedPayment = BankPaymentTestBuilder.IN_DB_ID_1();
             realBankPayment.setAmount(new BigDecimal("1291482.00"));
             expectedPayment.setAmount(new BigDecimal("1291482.00"));
-            Mockito.doReturn(expectedPayment)
-                    .when(bankPaymentRepository)
-                    .save(realBankPayment);
+
+            doReturn(expectedPayment).when(bankPaymentRepository).save(realBankPayment);
             bankPaymentServiceImpl.update(realBankPayment);
+
             assertAll(
                     () -> assertThat(realBankPayment.getId()).isEqualTo(expectedPayment.getId()),
                     () -> assertThat(realBankPayment.getAmount()).isEqualTo(expectedPayment.getAmount())
@@ -146,20 +150,22 @@ class BankPaymentServiceImplTest {
         @Test
         void checkDeleteWithRealId() {
             BankPayment testBP = BankPaymentTestBuilder.IN_DB_ID_1();
+
             testBP.setId(12321L);
-            Mockito.doNothing()
-                    .when(bankPaymentRepository).delete(testBP);
+            doNothing().when(bankPaymentRepository).delete(testBP);
             bankPaymentServiceImpl.delete(testBP);
+
             verify(bankPaymentRepository).delete(testBP);
         }
 
         @Test
         void checkDeleteVerify() {
             BankPayment testBP = BankPaymentTestBuilder.IN_DB_ID_1();
-            Mockito.doNothing()
-                    .when(bankPaymentRepository).delete(testBP);
+
+            doNothing().when(bankPaymentRepository).delete(testBP);
             bankPaymentServiceImpl.delete(testBP);
-            verify(bankPaymentRepository, times(2)).delete(testBP);
+
+            verify(bankPaymentRepository).delete(testBP);
         }
     }
 
@@ -169,18 +175,20 @@ class BankPaymentServiceImplTest {
         @Test
         void checkDeleteByIdVerify() {
             final long ID_IN_DB = 1L;
-            Mockito.doNothing()
-                    .when(bankPaymentRepository).deleteById(ID_IN_DB);
+
+            doNothing().when(bankPaymentRepository).deleteById(ID_IN_DB);
             bankPaymentServiceImpl.deleteById(ID_IN_DB);
+
             verify(bankPaymentRepository).deleteById(ID_IN_DB);
         }
 
         @Test
         void checkDeleteByIdNoRealId() {
             final long ID_IN_DB = 11241L;
-            Mockito.doNothing()
-                    .when(bankPaymentRepository).deleteById(ID_IN_DB);
+
+            doNothing().when(bankPaymentRepository).deleteById(ID_IN_DB);
             bankPaymentServiceImpl.deleteById(ID_IN_DB);
+
             verify(bankPaymentRepository).deleteById(ID_IN_DB);
         }
     }
@@ -201,6 +209,11 @@ class BankPaymentServiceImplTest {
 
         @Test
         void checkInitiatePaymentShouldThrowInsufficientFundsException() {
+            BankAccount expectedSender = BankAccountTestBuilder.SECOND_IN_DB();
+            BankAccount expectedRecipient = BankAccountTestBuilder.FIRST_IN_DB();
+
+            doReturn(Optional.of(expectedSender)).when(bankAccountRepository).findById(2L);
+            doReturn(Optional.of(expectedRecipient)).when(bankAccountRepository).findById(1L);
             assertThrows(
                     InsufficientFundsException.class,
                     () -> bankPaymentServiceImpl.initiatePayment(tdInfUSD)
@@ -212,15 +225,16 @@ class BankPaymentServiceImplTest {
             BankAccount initialSenderBankAccount = BankAccountTestBuilder.SECOND_IN_DB();
             BankAccount initialRecipientBankAccount = BankAccountTestBuilder.FIRST_IN_DB();
 
-            System.out.println(initialSenderBankAccount.getAmount());
             BigDecimal expectedSenderAmountSub = initialSenderBankAccount.getAmount().subtract(req2to1.amount);
             BigDecimal expectedRecipientAmountSub = initialRecipientBankAccount.getAmount().add(req2to1.amount);
+
             BankPayment expactedBankPayment = BankPaymentTestBuilder
                     .newBankPaymentByRequest(req2to1, PaymentStatus.ACCEPTED, initialSenderBankAccount);
 
-            Mockito.doReturn(expactedBankPayment)
-                    .when(bankPaymentRepository)
-                    .save(Mockito.any(BankPayment.class));
+            doReturn(Optional.of(initialSenderBankAccount)).when(bankAccountRepository).findById(2L);
+            doReturn(Optional.of(initialRecipientBankAccount)).when(bankAccountRepository).findById(1L);
+            doReturn(expactedBankPayment).when(bankPaymentRepository).save(Mockito.any(BankPayment.class));
+
             BankPayment actualBankPayment = bankPaymentServiceImpl.initiatePayment(req2to1);
 
             BankAccount actualSenderBankAccount = bankAccountService.findById(req2to1.senderBankAccountId)
@@ -231,7 +245,10 @@ class BankPaymentServiceImplTest {
             assertAll(
                     () -> assertThat(actualBankPayment.getStatus()).isEqualTo(expactedBankPayment.getStatus()),
                     () -> assertThat(actualSenderBankAccount.getAmount()).isEqualTo(expectedSenderAmountSub),
-                    () -> assertThat(actualRecipientBankAccount.getAmount()).isEqualTo(expectedRecipientAmountSub)
+                    () -> assertThat(actualRecipientBankAccount.getAmount()).isEqualTo(expectedRecipientAmountSub),
+                    () -> verify(bankAccountRepository).save(actualRecipientBankAccount),
+                    () -> verify(bankAccountRepository).save(actualSenderBankAccount)
+
             );
         }
     }
