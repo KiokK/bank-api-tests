@@ -59,7 +59,7 @@ class BankPaymentServiceImplTest {
                     .newBankPaymentByRequest(req2to1, PaymentStatus.ACCEPTED, initialSenderBankAccount);
             expactedBankPayment.setId(4L);// bankPaymentRepository.count() + 1
 
-            doReturn(expactedBankPayment).when(bankPaymentRepository).save(newBankPayment);
+            when(bankPaymentRepository.save(newBankPayment)).thenReturn(expactedBankPayment);
             newBankPayment = bankPaymentServiceImpl.create(newBankPayment);
 
             assertThat(newBankPayment.getId())
@@ -70,8 +70,9 @@ class BankPaymentServiceImplTest {
     @Nested
     public class FindById {
         @Test
-        void checkFindByIdShouldReturnEmptyIptional() {
+        void checkFindByIdShouldReturnEmptyOptional() {
             final long NO_EXITING_ID = 112312L;
+            when(bankPaymentRepository.findById(NO_EXITING_ID)).thenReturn(Optional.empty());
             Optional<BankPayment> actualBankPayment = bankPaymentServiceImpl.findById(NO_EXITING_ID);
 
             assertThat(actualBankPayment)
@@ -83,7 +84,7 @@ class BankPaymentServiceImplTest {
             final long ID_IN_DB = 1L;
             BankPayment expected = BankPaymentTestBuilder.IN_DB_ID_1();
 
-            doReturn(Optional.of(expected)).when(bankPaymentRepository).findById(ID_IN_DB);
+            when(bankPaymentRepository.findById(ID_IN_DB)).thenReturn(Optional.of(expected));
             BankPayment actualBankPayment = bankPaymentServiceImpl.findById(ID_IN_DB).orElse(new BankPayment());
 
             assertThat(actualBankPayment.getId())
@@ -103,11 +104,11 @@ class BankPaymentServiceImplTest {
         void checkFindAllShouldReturnCount3() {
             final int EXPECTED_SIZE = BankPaymentTestBuilder.COUNT;
 
-            doReturn(
+            when(bankPaymentRepository.findAll()).thenReturn(
                     List.of(BankPaymentTestBuilder.IN_DB_ID_1(),
                             BankPaymentTestBuilder.IN_DB_ID_2(),
                             BankPaymentTestBuilder.IN_DB_ID_3())
-            ).when(bankPaymentRepository).findAll();
+            );
 
             assertThat(bankPaymentServiceImpl.findAll().size())
                     .isEqualTo(EXPECTED_SIZE);
@@ -125,7 +126,7 @@ class BankPaymentServiceImplTest {
             realBankPayment.setAmount(new BigDecimal("1291482.00"));
             expectedPayment.setAmount(new BigDecimal("1291482.00"));
 
-            doReturn(expectedPayment).when(bankPaymentRepository).save(realBankPayment);
+            when(bankPaymentRepository.save(realBankPayment)).thenReturn(expectedPayment);
             bankPaymentServiceImpl.update(realBankPayment);
 
             assertAll(
@@ -151,7 +152,6 @@ class BankPaymentServiceImplTest {
         void checkDeleteWithRealId() {
             BankPayment testBP = BankPaymentTestBuilder.IN_DB_ID_1();
 
-            testBP.setId(12321L);
             doNothing().when(bankPaymentRepository).delete(testBP);
             bankPaymentServiceImpl.delete(testBP);
 
@@ -212,8 +212,8 @@ class BankPaymentServiceImplTest {
             BankAccount expectedSender = BankAccountTestBuilder.SECOND_IN_DB();
             BankAccount expectedRecipient = BankAccountTestBuilder.FIRST_IN_DB();
 
-            doReturn(Optional.of(expectedSender)).when(bankAccountRepository).findById(2L);
-            doReturn(Optional.of(expectedRecipient)).when(bankAccountRepository).findById(1L);
+            when(bankAccountRepository.findById(2L)).thenReturn(Optional.of(expectedSender));
+            when(bankAccountRepository.findById(1L)).thenReturn(Optional.of(expectedRecipient));
             assertThrows(
                     InsufficientFundsException.class,
                     () -> bankPaymentServiceImpl.initiatePayment(tdInfUSD)
@@ -231,8 +231,8 @@ class BankPaymentServiceImplTest {
             BankPayment expactedBankPayment = BankPaymentTestBuilder
                     .newBankPaymentByRequest(req2to1, PaymentStatus.ACCEPTED, initialSenderBankAccount);
 
-            doReturn(Optional.of(initialSenderBankAccount)).when(bankAccountRepository).findById(2L);
-            doReturn(Optional.of(initialRecipientBankAccount)).when(bankAccountRepository).findById(1L);
+            when(bankAccountRepository.findById(2L)).thenReturn(Optional.of(initialSenderBankAccount));
+            when(bankAccountRepository.findById(1L)).thenReturn(Optional.of(initialRecipientBankAccount));
             doReturn(expactedBankPayment).when(bankPaymentRepository).save(Mockito.any(BankPayment.class));
 
             BankPayment actualBankPayment = bankPaymentServiceImpl.initiatePayment(req2to1);
@@ -248,7 +248,6 @@ class BankPaymentServiceImplTest {
                     () -> assertThat(actualRecipientBankAccount.getAmount()).isEqualTo(expectedRecipientAmountSub),
                     () -> verify(bankAccountRepository).save(actualRecipientBankAccount),
                     () -> verify(bankAccountRepository).save(actualSenderBankAccount)
-
             );
         }
     }

@@ -1,5 +1,6 @@
 package by.vadzimmatsiushonak.bank.api.util;
 
+import by.vadzimmatsiushonak.bank.api.model.entity.BankAccount;
 import by.vadzimmatsiushonak.bank.api.model.entity.BankCard;
 
 import java.time.LocalDate;
@@ -26,6 +27,15 @@ public class BankCardTestBuilder {
         ID2_VADIMS.setExpirationDate(LocalDate.parse("2026-10-01", formatter));
         ID2_VADIMS.setNumber("4585227889907279");
 //        ID2_VADIMS.setBankAccount(BankAccountTestBuilder.SECOND_IN_DB());
+        return ID2_VADIMS;
+    }
+
+    public static final BankCard newBankCard(BankAccount bankAccount, LocalDate expirationDate) {
+        BankCard ID2_VADIMS = new BankCard();
+        ID2_VADIMS.setCvs("234");
+        ID2_VADIMS.setExpirationDate(expirationDate);
+        ID2_VADIMS.setNumber("4585227889907111");
+        ID2_VADIMS.setBankAccount(bankAccount);
         return ID2_VADIMS;
     }
 
