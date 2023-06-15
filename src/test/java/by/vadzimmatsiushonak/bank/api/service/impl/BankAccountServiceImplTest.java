@@ -18,10 +18,15 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
+import static by.vadzimmatsiushonak.bank.api.util.BankAccountTestBuilder.recipientBankAccount;
+import static by.vadzimmatsiushonak.bank.api.util.BankAccountTestBuilder.senderBankAccount;
+import static by.vadzimmatsiushonak.bank.api.util.TestConstants.NEW_AMOUNT;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BankAccountServiceImplTest {
@@ -38,11 +43,11 @@ class BankAccountServiceImplTest {
         void checkCreateShouldSaveNewBankAccount() {
             BankAccount actualBankAccount = BankAccountTestBuilder
                     .newBankAccountNoCard(new BigDecimal("100101.00"), Currency.BYN, OperationType.DEBIT,
-                            BankTestBuilder.ID1_ADMIN_B(), CustomerTestBuilder.ID2_VADZIM());
+                            BankTestBuilder.newBankAdminBank(), CustomerTestBuilder.newSenderId2());
 
             BankAccount expected = BankAccountTestBuilder
                     .newBankAccountNoCard(new BigDecimal("100101.00"), Currency.BYN, OperationType.DEBIT,
-                            BankTestBuilder.ID1_ADMIN_B(), CustomerTestBuilder.ID2_VADZIM());
+                            BankTestBuilder.newBankAdminBank(), CustomerTestBuilder.newSenderId2());
 
             final long NEXT_ID = 3L;
             expected.setId(NEXT_ID);
@@ -68,7 +73,7 @@ class BankAccountServiceImplTest {
         @Test
         void checkFindByIdShouldReturnFirstInDB() {
             final long ID_IN_DB = 1L;
-            BankAccount expected = BankAccountTestBuilder.FIRST_IN_DB();
+            BankAccount expected = recipientBankAccount();
 
             when(bankAccountRepository.findById(ID_IN_DB)).thenReturn(Optional.of(expected));
             BankAccount actualBankAccount = bankAccountService.findById(ID_IN_DB).orElse(new BankAccount());
@@ -91,7 +96,7 @@ class BankAccountServiceImplTest {
             final int EXPECTED_SIZE = BankAccountTestBuilder.COUNT;
 
             when(bankAccountRepository.findAll()).thenReturn(
-                    List.of(BankAccountTestBuilder.FIRST_IN_DB(), BankAccountTestBuilder.SECOND_IN_DB())
+                    List.of(recipientBankAccount(), senderBankAccount())
             );
 
             assertThat(bankAccountService.findAll().size())
@@ -104,10 +109,10 @@ class BankAccountServiceImplTest {
 
         @Test
         void checkUpdateShouldReturnUpdated() {
-            BankAccount realBankAccount = BankAccountTestBuilder.FIRST_IN_DB();
-            BankAccount expectedBankAccount = BankAccountTestBuilder.FIRST_IN_DB();
-            realBankAccount.setAmount(new BigDecimal("12914282.00"));
-            expectedBankAccount.setAmount(new BigDecimal("12914282.00"));
+            BankAccount realBankAccount = recipientBankAccount();
+            BankAccount expectedBankAccount = recipientBankAccount();
+            realBankAccount.setAmount(NEW_AMOUNT);
+            expectedBankAccount.setAmount(NEW_AMOUNT);
 
             when(bankAccountRepository.save(realBankAccount)).thenReturn(expectedBankAccount);
             bankAccountService.update(realBankAccount);
@@ -133,7 +138,7 @@ class BankAccountServiceImplTest {
     public class Delete {
         @Test
         void checkDeleteWithRealId() {
-            BankAccount testBP = BankAccountTestBuilder.FIRST_IN_DB();
+            BankAccount testBP = recipientBankAccount();
 
             doNothing().when(bankAccountRepository).delete(testBP);
             bankAccountService.delete(testBP);
@@ -143,7 +148,7 @@ class BankAccountServiceImplTest {
 
         @Test
         void checkDeleteVerify() {
-            BankAccount testBP = BankAccountTestBuilder.FIRST_IN_DB();
+            BankAccount testBP = new BankAccount();
 
             doNothing().when(bankAccountRepository).delete(testBP);
             bankAccountService.delete(testBP);

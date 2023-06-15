@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.Optional;
 
+import static by.vadzimmatsiushonak.bank.api.util.UserTestBuilder.newUserAdmin;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,7 +33,7 @@ class CustomUserDetailsServiceTest {
     public class LoadUserByUsername {
         @Test
         void checkLoadUserByUsernameShouldReturnRealDetails() {
-            User expectedUser = UserTestBuilder.ID1_ADMIN();
+            User expectedUser = newUserAdmin();
 
             doReturn(Optional.of(expectedUser)).when(userRepository).findByLogin(expectedUser.getLogin());
             UserDetails actualDetails = userDetailsService.loadUserByUsername(expectedUser.getLogin());
@@ -47,8 +48,9 @@ class CustomUserDetailsServiceTest {
 
         @Test
         void checkLoadUserByUsernameShouldThrowUsernameNotFoundException() {
+            final String NO_REAL_LOGIN = "aoskdoa";
             User noRealUser = new User();
-            noRealUser.setLogin("aoskdoa");
+            noRealUser.setLogin(NO_REAL_LOGIN);
 
             assertThrows(UsernameNotFoundException.class,
                     () -> userDetailsService.loadUserByUsername(noRealUser.getLogin()));
@@ -58,7 +60,7 @@ class CustomUserDetailsServiceTest {
 
         @Test
         void checkLoadUserByUsernameShouldThrowUserIsNotActive() {
-            User noActiveUser = UserTestBuilder.ID3_NO_ACTIVE();
+            User noActiveUser = UserTestBuilder.newBlockedUser();
 
             doReturn(Optional.of(noActiveUser)).when(userRepository).findByLogin(noActiveUser.getLogin());
 

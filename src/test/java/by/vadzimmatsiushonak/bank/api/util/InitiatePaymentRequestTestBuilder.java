@@ -3,29 +3,39 @@ package by.vadzimmatsiushonak.bank.api.util;
 import by.vadzimmatsiushonak.bank.api.model.dto.request.InitiatePaymentRequest;
 import by.vadzimmatsiushonak.bank.api.model.entity.base.Currency;
 
-import java.math.BigDecimal;
+import static by.vadzimmatsiushonak.bank.api.util.TestConstants.TEST_PAYMENT_MORE_THAN_POSSIBLE_VALUE;
+import static by.vadzimmatsiushonak.bank.api.util.TestConstants.TEST_PAYMENT_VALUE;
+import static by.vadzimmatsiushonak.bank.api.util.TestConstants.TEST_RECIPIENT_ID;
+import static by.vadzimmatsiushonak.bank.api.util.TestConstants.TEST_SENDER_ID;
 
 public class InitiatePaymentRequestTestBuilder {
 
-    public static final InitiatePaymentRequest PAY_TO_YOURSELF_120 = InitiatePaymentRequest.builder()
-            .recipientBankAccountId(1L)
-            .senderBankAccountId(1L)
-            .amount(new BigDecimal("120.00"))
-            .currency(Currency.USD)
-            .build();
+    public static final int COUNT = 3;
 
-    public static final InitiatePaymentRequest PAY_2_TO_1_120 = InitiatePaymentRequest.builder()
-            .recipientBankAccountId(1L)
-            .senderBankAccountId(2L)
-            .amount(new BigDecimal("120.00"))
-            .currency(Currency.USD)
-            .build();
+    public static InitiatePaymentRequest payToYourself120() {
+        InitiatePaymentRequest request = new InitiatePaymentRequest();
+        request.recipientBankAccountId = TEST_RECIPIENT_ID;
+        request.senderBankAccountId = TEST_RECIPIENT_ID;
+        request.amount = TEST_PAYMENT_VALUE;
+        request.currency = Currency.USD;
+        return request;
+    }
 
-    public static final InitiatePaymentRequest PAY_2_TO_1_MORE_THAN_POSSIBLE = InitiatePaymentRequest.builder()
-            .recipientBankAccountId(1L)
-            .senderBankAccountId(2L)
-            .amount(new BigDecimal("1999999999.00"))
-            .currency(Currency.USD)
-            .build();
+    public static InitiatePaymentRequest payUserToAdmin120USD() {
+        InitiatePaymentRequest request = new InitiatePaymentRequest();
+        request.recipientBankAccountId = TEST_RECIPIENT_ID;
+        request.senderBankAccountId = TEST_SENDER_ID;
+        request.amount = TEST_PAYMENT_VALUE;
+        request.currency = Currency.USD;
+        return request;
+    }
 
+    public static InitiatePaymentRequest payMoreThanPossibleUserToAdmin() {
+        InitiatePaymentRequest request = new InitiatePaymentRequest();
+        request.recipientBankAccountId = TEST_RECIPIENT_ID;
+        request.senderBankAccountId = TEST_SENDER_ID;
+        request.amount = TEST_PAYMENT_MORE_THAN_POSSIBLE_VALUE;
+        request.currency = Currency.USD;
+        return request;
+    }
 }

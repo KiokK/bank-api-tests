@@ -4,39 +4,49 @@ import by.vadzimmatsiushonak.bank.api.model.entity.BankAccount;
 import by.vadzimmatsiushonak.bank.api.model.entity.BankCard;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+
+import static by.vadzimmatsiushonak.bank.api.util.TestConstants.*;
 
 public class BankCardTestBuilder {
 
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final int COUNT = 2;
 
-    public static final BankCard ID1_ADMINS() {
+    /**
+     * @return recipient bank card without {@link BankCard#bankAccount} field.
+     * The most suitable option {@link BankAccountTestBuilder#recipientBankAccount()}
+     */
+    public static final BankCard newRecipientBankCard() {
         BankCard ID1_ADMINS = new BankCard();
-        ID1_ADMINS.setId(1L);
-        ID1_ADMINS.setCvs("111");
-        ID1_ADMINS.setExpirationDate(LocalDate.parse("2111-11-11", formatter));
-        ID1_ADMINS.setNumber("1234567890987654");
-//        ID1_ADMINS.setBankAccount(BankAccountTestBuilder.FIRST_IN_DB());
+        ID1_ADMINS.setId(TEST_RECIPIENT_CARD_ID);
+        ID1_ADMINS.setCvs(TEST_RECIPIENT_CARD_CVS);
+        ID1_ADMINS.setExpirationDate(TEST_RECIPIENT_CARD_EXPIRATION_DATE);
+        ID1_ADMINS.setNumber(TEST_RECIPIENT_CARD_NUMBER);
         return ID1_ADMINS;
     }
 
-    public static final BankCard ID2_VADZIMS() {
+    /**
+     * @return sender bank card without {@link BankCard#bankAccount} field.
+     * The most suitable option {@link BankAccountTestBuilder#senderBankAccount()}
+     */
+    public static final BankCard newSenderBankCard() {
         BankCard ID2_VADIMS = new BankCard();
-        ID2_VADIMS.setId(2L);
-        ID2_VADIMS.setCvs("123");
-        ID2_VADIMS.setExpirationDate(LocalDate.parse("2026-10-01", formatter));
-        ID2_VADIMS.setNumber("4585227889907279");
-//        ID2_VADIMS.setBankAccount(BankAccountTestBuilder.SECOND_IN_DB());
+        ID2_VADIMS.setId(TEST_SENDER_CARD_ID);
+        ID2_VADIMS.setCvs(TEST_SENDER_CARD_CVS);
+        ID2_VADIMS.setExpirationDate(TEST_SENDER_CARD_EXPIRATION_DATE);
+        ID2_VADIMS.setNumber(TEST_SENDER_CARD_NUMBER);
         return ID2_VADIMS;
     }
 
+    /**
+     * @return new bank card {@link BankCard#id} and {@link BankCard#bankAccount} fields are equals null
+     */
     public static final BankCard newBankCard(BankAccount bankAccount, LocalDate expirationDate) {
-        BankCard ID2_VADIMS = new BankCard();
-        ID2_VADIMS.setCvs("234");
-        ID2_VADIMS.setExpirationDate(expirationDate);
-        ID2_VADIMS.setNumber("4585227889907111");
-        ID2_VADIMS.setBankAccount(bankAccount);
-        return ID2_VADIMS;
+        BankCard newCard = new BankCard();
+        newCard.setCvs(TEST_NEW_CARD_CVS);
+        newCard.setExpirationDate(expirationDate);
+        newCard.setNumber(TEST_NEW_CARD_NUMBER);
+        newCard.setBankAccount(bankAccount);
+        return newCard;
     }
 
 }
